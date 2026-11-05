@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>엘리멘트 타워 — 잃어버린 여섯 세계</title>
+<meta name="description" content="미션을 하고 보호자 승인을 받아 한 층씩 오르는 6층 엘리멘트 타워 3D 던전">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Nanum+Myeongjo:wght@700;800&family=Noto+Sans+KR:wght@400;500;700;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="tower.css?v=2">
+<script type="importmap">{ "imports": { "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js", "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/" } }</script>
+</head>
+<body>
+<canvas id="c" aria-label="엘리멘트 타워 3D 화면"></canvas>
+<div id="labels" aria-hidden="true"></div>
+<div id="fade"></div>
+
+<header id="top">
+  <button class="logo" id="go-out" aria-label="타워 밖으로">엘리멘트 타워</button>
+  <div class="where"><b id="where-t">탑 앞 광장</b><span id="where-s">6층을 모두 오르면 왕이 돼요</span></div>
+  <div class="top-r">
+    <div class="dots" id="dots" aria-label="층 진행"></div>
+    <button class="pill" id="btn-parent">보호자</button>
+  </div>
+</header>
+
+<aside id="panel" aria-label="이 층의 미션" hidden>
+  <button class="pn-head" id="pn-toggle" aria-expanded="true">
+    <span class="pn-rank" id="pn-rank">1층</span><b id="pn-name">새싹 수습 마법사</b><i id="pn-count">0 / 3</i>
+  </button>
+  <div class="pn-body" id="pn-body">
+    <p class="pn-guard" id="pn-guard">관문 수호자가 미션 3개를 줬어요.</p>
+    <ul class="pn-list" id="pn-list"></ul>
+    <button class="pn-go" id="pn-go" disabled>관문이 잠겨 있어요</button>
+    <p class="pn-note">현실 미션은 보호자가 승인해야 완료돼요.</p>
+  </div>
+</aside>
+
+<div id="hint">바닥을 눌러 이동 · 방 이름표를 누르면 들어가요</div>
+
+<section id="intro">
+  <div class="hero">
+    <p class="eyebrow">THE ELEMENT TOWER · 잃어버린 여섯 세계</p>
+    <p class="kicker">가족과 함께하는 생활·학습 퀘스트</p>
+    <h1 class="gold">엘리멘트 타워</h1>
+    <p class="tag">오늘의 미션이 내일의 모험이 된다</p>
+    <label class="intro-name" for="hero-name">모험가 이름 <input id="hero-name" maxlength="8" placeholder="예: 시원"></label>
+    <button class="btn-gold" id="btn-start">모험 시작하기 <span aria-hidden="true">›</span></button>
+  </div>
+  <ol class="floor-list" id="intro-floors" aria-label="여섯 개의 층"></ol>
+  <div class="rank-strip"><b class="rs-t">타워 랭크</b><span class="rs-d">미션을 완료하고 6개의 층을 올라 왕이 되어 보세요</span><div class="ranks" id="ranks"></div></div>
+</section>
+
+<section id="modal" class="card-wrap" hidden>
+  <div class="card" role="dialog" aria-modal="true" aria-labelledby="m-title">
+    <div class="m-head"><h2 id="m-title">방</h2><button class="x" id="m-x" aria-label="닫기">✕</button></div>
+    <div id="m-body"></div>
+  </div>
+</section>
+
+<div id="toast" role="status"></div>
+<script type="module" src="tower.js?v=2"></script>
+</body>
+</html>
