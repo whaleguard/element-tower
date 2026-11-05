@@ -85,15 +85,15 @@ function dressHero(h) {
 function buildOutside() {
   const sc = new THREE.Scene();
   sc.background = canvasTex(16, 256, (g, W, H) => { const gr = g.createLinearGradient(0, 0, 0, H); gr.addColorStop(0, '#0b0f24'); gr.addColorStop(0.55, '#2b2f5a'); gr.addColorStop(1, '#6b4f6e'); g.fillStyle = gr; g.fillRect(0, 0, W, H); });
-  sc.fog = new THREE.FogExp2('#1a2140', 0.012);
+  sc.fog = new THREE.FogExp2('#1a2140', 0.007);
   sc.add(new THREE.HemisphereLight('#b8c4ff', '#3a3048', 1.6));
-  const moon = new THREE.DirectionalLight('#e6ecff', 2.6); moon.position.set(-30, 50, 30); moon.castShadow = true; moon.shadow.mapSize.set(2048, 2048); Object.assign(moon.shadow.camera, { left: -40, right: 40, top: 40, bottom: -40, far: 150 }); sc.add(moon);
+  const moon = new THREE.DirectionalLight('#e6ecff', 2.6); moon.position.set(-30, 50, 30); moon.castShadow = true; moon.shadow.mapSize.set(2048, 2048); moon.position.set(-60, 100, 60); Object.assign(moon.shadow.camera, { left: -60, right: 60, top: 80, bottom: -20, far: 260 }); sc.add(moon);
   // 별
   const sg = new THREE.BufferGeometry(); const sp = []; for (let i = 0; i < 700; i++) { const a = Math.random() * Math.PI * 2, b = Math.random() * 0.45 + 0.08, r = 180; sp.push(Math.cos(a) * Math.cos(b) * r, Math.sin(b) * r, Math.sin(a) * Math.cos(b) * r); }
   sg.setAttribute('position', new THREE.Float32BufferAttribute(sp, 3)); sc.add(new THREE.Points(sg, new THREE.PointsMaterial({ color: '#ffffff', size: 0.8, sizeAttenuation: true })));
   // 땅·광장
   const ground = new THREE.Mesh(new THREE.CircleGeometry(150, 64), M('#2c3a2a', { roughness: 1 })); ground.rotation.x = -Math.PI / 2; ground.receiveShadow = true; sc.add(ground);
-  const plaza = new THREE.Mesh(new THREE.CircleGeometry(16, 64), new THREE.MeshStandardMaterial({ map: canvasTex(512, 512, (g, W) => { g.fillStyle = '#8a7c6a'; g.fillRect(0, 0, W, W); for (let r = 0; r < 16; r++) for (let i = 0; i < 16; i++) { g.fillStyle = ['#9a8b77', '#86786a', '#a39380', '#7d7062'][(r * 3 + i) % 4]; g.fillRect(i * 32 + (r % 2) * 16 + 1, r * 32 + 1, 30, 30); } }), roughness: 0.95 }));
+  const plaza = new THREE.Mesh(new THREE.CircleGeometry(30, 72), new THREE.MeshStandardMaterial({ map: canvasTex(512, 512, (g, W) => { g.fillStyle = '#8a7c6a'; g.fillRect(0, 0, W, W); for (let r = 0; r < 16; r++) for (let i = 0; i < 16; i++) { g.fillStyle = ['#9a8b77', '#86786a', '#a39380', '#7d7062'][(r * 3 + i) % 4]; g.fillRect(i * 32 + (r % 2) * 16 + 1, r * 32 + 1, 30, 30); } }), roughness: 0.95 }));
   plaza.rotation.x = -Math.PI / 2; plaza.position.y = 0.02; plaza.receiveShadow = true; sc.add(plaza);
   // 탑: 6층, 위로 갈수록 좁아짐
   const tower = new THREE.Group(); sc.add(tower); const clickTower = [];
@@ -108,7 +108,7 @@ function buildOutside() {
     for (let k = 0; k < 8; k++) { const a = k / 8 * Math.PI * 2 + i * 0.3; const win = new THREE.Mesh(new THREE.PlaneGeometry(0.8, 1.3), new THREE.MeshStandardMaterial({ color: unlocked ? '#ffe2a0' : '#2a2a35', emissive: unlocked ? F.color : '#000', emissiveIntensity: unlocked ? 0.9 : 0 })); win.position.set(Math.sin(a) * (r - 0.12), y + 2.1, Math.cos(a) * (r - 0.12)); win.lookAt(Math.sin(a) * r * 2, y + 2.1, Math.cos(a) * r * 2); tower.add(win); }
     at(cyl(r + 0.35, r + 0.35, 0.3, M('#4e4a58'), 36), 0, y + h, 0, tower);
     // 층 안의 원소 빛 (시안: 층마다 다른 색 빛이 아치창으로 새어 나옴)
-    const pl = new THREE.PointLight(F.color, unlocked ? 40 : 6, r * 2.6, 1.6); pl.position.set(0, y + 2.2, r + 1.5); sc.add(pl);
+    const pl = new THREE.PointLight(F.color, unlocked ? 160 : 20, r * 5.2, 1.6); pl.position.set(0, y + 2.2, r + 1.5); tower.add(pl);
     const core = at(new THREE.Mesh(F.n === 3 ? new THREE.IcosahedronGeometry(1.6, 1) : F.n === 4 ? new THREE.OctahedronGeometry(1.5) : F.n === 5 ? new THREE.TorusKnotGeometry(0.9, 0.25, 64, 8) : F.n === 6 ? new THREE.CylinderGeometry(1.1, 0.9, 0.9, 8) : new THREE.ConeGeometry(1.0, 2.0, 12), new THREE.MeshStandardMaterial({ color: F.color, emissive: F.color, emissiveIntensity: unlocked ? 2.2 : 0.2 })), 0, y + 2.2, r - 0.9, tower);
     cores.push(core);
     const arch = at(new THREE.Mesh(new THREE.PlaneGeometry(2.6, 3.2), new THREE.MeshBasicMaterial({ color: F.color, transparent: true, opacity: unlocked ? 0.55 : 0.12 })), 0, y + 2.1, r + 0.02, tower);
@@ -121,75 +121,102 @@ function buildOutside() {
   const stepM = M('#8b8597');
   for (let i = 0; i < 120; i++) { const t = i / 120, a = t * Math.PI * 2 * 3, rr = 7.8 - t * 4.2; const s = box(1.5, 0.22, 0.8, stepM); s.position.set(Math.sin(a) * rr, t * (y - 1), Math.cos(a) * rr); s.rotation.y = a; tower.add(s); }
   // 문
+  tower.scale.setScalar(2);
   const door = at(new THREE.Mesh(new THREE.PlaneGeometry(2.4, 3.4), M('#5a3a24', { emissive: '#ffb04a', emissiveIntensity: 0.35 })), 0, 1.7, 7.21, tower); door.userData.floor = 'enter'; clickTower.push(door);
   at(sign('엘리멘트 타워', 4.4, 0.9, '#f3c45b', '#2a1f05'), 0, 3.9, 7.25, tower);
   // 횃불·나무
   const torches = [];
-  for (const sx of [-2.6, 2.6]) { at(cyl(0.08, 0.1, 2.2, M('#3a2a1e'), 8), sx, 1.1, 8.2, sc); const fl = at(new THREE.Mesh(new THREE.SphereGeometry(0.22, 10, 8), new THREE.MeshBasicMaterial({ color: '#ffb04a' })), sx, 2.35, 8.2, sc); const pl = new THREE.PointLight('#ffb04a', 6, 12, 1.6); pl.position.set(sx, 2.6, 8.4); sc.add(pl); torches.push(fl); }
+  for (const sx of [-4.2, 4.2]) { at(cyl(0.1, 0.13, 3.2, M('#3a2a1e'), 8), sx, 1.6, 16.6, sc); const fl = at(new THREE.Mesh(new THREE.SphereGeometry(0.32, 10, 8), new THREE.MeshBasicMaterial({ color: '#ffb04a' })), sx, 3.4, 16.6, sc); const pl = new THREE.PointLight('#ffb04a', 14, 18, 1.6); pl.position.set(sx, 3.7, 16.9); sc.add(pl); torches.push(fl); }
   const treeM = M('#2f5a3a'), trunkM = M('#4a3626');
-  for (let i = 0; i < 46; i++) { const a = Math.random() * Math.PI * 2, r = 22 + Math.random() * 40; const t = new THREE.Group(); at(cyl(0.2, 0.3, 2, trunkM, 8), 0, 1, 0, t); for (let k = 0; k < 3; k++) at(new THREE.Mesh(new THREE.ConeGeometry(1.8 - k * 0.45, 2, 9), treeM), 0, 2.4 + k * 1.1, 0, t); t.position.set(Math.cos(a) * r, 0, Math.sin(a) * r); t.scale.setScalar(0.8 + Math.random() * 0.8); t.traverse(o => { if (o.isMesh) o.castShadow = true; }); sc.add(t); }
+  for (let i = 0; i < 46; i++) { const a = Math.random() * Math.PI * 2, r = 36 + Math.random() * 50; const t = new THREE.Group(); at(cyl(0.2, 0.3, 2, trunkM, 8), 0, 1, 0, t); for (let k = 0; k < 3; k++) at(new THREE.Mesh(new THREE.ConeGeometry(1.8 - k * 0.45, 2, 9), treeM), 0, 2.4 + k * 1.1, 0, t); t.position.set(Math.cos(a) * r, 0, Math.sin(a) * r); t.scale.setScalar(0.8 + Math.random() * 0.8); t.traverse(o => { if (o.isMesh) o.castShadow = true; }); sc.add(t); }
   // 층 이름표 앵커
-  const anchors = FLOORS.map((F, i) => { const o = new THREE.Object3D(); const r = 7.2 - i * 0.75; o.position.set(r * 0.72 + 1.2, floorY[i] + 2.6, r * 0.72); sc.add(o); return { o, F }; });
-  return { scene: sc, clickables: clickTower, anim: t => { orb.rotation.y = t * 0.4; cores.forEach((c, i) => { c.rotation.y = t * (0.5 + i * 0.1); c.scale.setScalar(1 + Math.sin(t * 2 + i) * 0.06); }); orb.position.y = y + 1.8 + Math.sin(t * 1.5) * 0.25; torches.forEach((f, i) => f.scale.setScalar(1 + Math.sin(t * 9 + i) * 0.12)); }, anchors, view: 'out', towerH: y };
+  const anchors = FLOORS.map((F, i) => { const o = new THREE.Object3D(); const r = 7.2 - i * 0.75; o.position.set((r * 0.72 + 1.2) * 2, (floorY[i] + 2.6) * 2, r * 0.72 * 2); sc.add(o); return { o, F }; });
+  return { scene: sc, clickables: clickTower, anim: t => { orb.rotation.y = t * 0.4; cores.forEach((c, i) => { c.rotation.y = t * (0.5 + i * 0.1); c.scale.setScalar(1 + Math.sin(t * 2 + i) * 0.06); }); orb.position.y = y + 1.8 + Math.sin(t * 1.5) * 0.25; torches.forEach((f, i) => f.scale.setScalar(1 + Math.sin(t * 9 + i) * 0.12)); }, anchors, view: 'out', towerH: y * 2 };
 }
 
 /* ================= 층 내부 ================= */
-const R_IN = 16, R_HUB = 6;
-function roomAngle(i) { return -Math.PI / 2 + (i + 0.5) * (Math.PI * 2 / 6) + Math.PI / 6; } // 6칸 중 5칸 = 방, 남쪽(입구) 1칸 비움
+const R_IN = 30, R_HUB = 9, WALL_H = 9;
+function roomAngle(i) { return Math.PI / 2 + (i + 1) * Math.PI / 3; } // 남쪽(+z, 입구) 칸은 비우고 나머지 5칸 = 방
 function buildFloor(n) {
   const F = FLOORS[n - 1]; const sc = new THREE.Scene();
-  sc.background = new THREE.Color(F.wall); sc.fog = new THREE.Fog(F.wall, 30, 70);
+  sc.background = new THREE.Color(F.wall); sc.fog = new THREE.Fog(F.wall, 70, 160);
   sc.add(new THREE.HemisphereLight('#fff4e0', F.wall, 0.75));
-  const key = new THREE.DirectionalLight('#fff1d6', 1.1); key.position.set(10, 26, 14); key.castShadow = true; key.shadow.mapSize.set(2048, 2048); Object.assign(key.shadow.camera, { left: -20, right: 20, top: 20, bottom: -20, far: 80 }); sc.add(key);
-  const glow = new THREE.PointLight(F.color, 30, 22, 1.4); glow.position.set(0, 6, 0); sc.add(glow);
+  const key = new THREE.DirectionalLight('#fff1d6', 1.1); key.position.set(10, 26, 14); key.castShadow = true; key.shadow.mapSize.set(2048, 2048); key.position.set(14, 40, 18); Object.assign(key.shadow.camera, { left: -34, right: 34, top: 34, bottom: -34, far: 120 }); sc.add(key);
+  const glow = new THREE.PointLight(F.color, 80, 40, 1.4); glow.position.set(0, 7.5, 0); sc.add(glow);
   const anim = [], clickables = [], anchors = [];
   // 바닥: 원소 문양 타일
   const ft = canvasTex(1024, 1024, (g, W) => { g.fillStyle = F.floor; g.fillRect(0, 0, W, W); for (let r = 0; r < 16; r++) for (let i = 0; i < 16; i++) { g.fillStyle = (r + i) % 2 ? 'rgba(255,255,255,.05)' : 'rgba(0,0,0,.12)'; g.fillRect(i * 64 + 2, r * 64 + 2, 60, 60); } g.strokeStyle = F.color; g.globalAlpha = 0.5; g.lineWidth = 10; g.beginPath(); g.arc(W / 2, W / 2, W * 0.18, 0, Math.PI * 2); g.stroke(); g.lineWidth = 4; g.beginPath(); g.arc(W / 2, W / 2, W * 0.46, 0, Math.PI * 2); g.stroke(); });
   const floor = new THREE.Mesh(new THREE.CircleGeometry(R_IN, 72), new THREE.MeshStandardMaterial({ map: ft, roughness: 0.85 })); floor.rotation.x = -Math.PI / 2; floor.receiveShadow = true; floor.userData.ground = true; sc.add(floor);
   // 둥근 벽 + 창
   const wallM = new THREE.MeshStandardMaterial({ color: '#7a7484', roughness: 0.95, side: THREE.BackSide, map: canvasTex(1024, 256, (g, W, H) => { g.fillStyle = '#8a8494'; g.fillRect(0, 0, W, H); for (let r = 0; r < 8; r++) for (let i = 0; i < 32; i++) { g.fillStyle = ['#938d9c', '#7f7989', '#8c8696'][(r * 5 + i) % 3]; g.fillRect(i * 32 + (r % 2) * 16 + 1, r * 32 + 1, 30, 30); } }) });
-  wallM.map.wrapS = THREE.RepeatWrapping; wallM.map.repeat.set(4, 1);
-  const wall = new THREE.Mesh(new THREE.CylinderGeometry(R_IN, R_IN, 7, 72, 1, true), wallM); wall.position.y = 3.5; wall.receiveShadow = true; sc.add(wall);
-  for (let k = 0; k < 12; k++) { const a = k / 12 * Math.PI * 2; const w = new THREE.Mesh(new THREE.PlaneGeometry(1.4, 2.4), new THREE.MeshBasicMaterial({ color: F.color, transparent: true, opacity: 0.55 })); w.position.set(Math.sin(a) * (R_IN - 0.05), 4.2, Math.cos(a) * (R_IN - 0.05)); w.lookAt(0, 4.2, 0); sc.add(w); }
+  wallM.map.wrapS = THREE.RepeatWrapping; wallM.map.repeat.set(8, 1);
+  // GPT 시안 텍스처: tex/f{n}-wall.jpg (없으면 1층 벽을 원소색으로 물들여 사용)
+  const TL = new THREE.TextureLoader();
+  const useWall = (t, tint) => { t.colorSpace = THREE.SRGBColorSpace; t.wrapS = THREE.RepeatWrapping; t.anisotropy = 8; const asp = t.image.width / t.image.height; t.repeat.set(Math.max(3, Math.round(2 * Math.PI * R_IN / (WALL_H * asp))), 1); wallM.map = t; wallM.color.set(tint || '#ffffff'); wallM.emissive = new THREE.Color('#ffffff'); wallM.emissiveMap = t; wallM.emissiveIntensity = 0.55; wallM.needsUpdate = true; };
+  TL.load(`tex/f${n}-wall.jpg?v=1`, t => useWall(t), undefined, () => TL.load('tex/f1-wall.jpg?v=1', t => useWall(t, n === 1 ? '#ffffff' : new THREE.Color(F.color).lerp(new THREE.Color('#ffffff'), 0.55)), undefined, () => {}));
+  const useFloor = (t, tint) => { t.colorSpace = THREE.SRGBColorSpace; t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(R_IN / 6, R_IN / 6); t.anisotropy = 8; floor.material.map = t; floor.material.color.set(tint || '#ffffff'); floor.material.needsUpdate = true; };
+  TL.load(`tex/f${n}-floor.jpg?v=1`, t => useFloor(t), undefined, () => TL.load('tex/f1-floor.jpg?v=1', t => useFloor(t, new THREE.Color(F.color).lerp(new THREE.Color('#ffffff'), 0.5)), undefined, () => {}));
+  const wall = new THREE.Mesh(new THREE.CylinderGeometry(R_IN, R_IN, WALL_H, 96, 1, true), wallM); wall.position.y = WALL_H / 2; wall.receiveShadow = true; sc.add(wall);
+  // 창문은 GPT 벽 텍스처에 포함
+  // 디테일: 칸막이 끝 돌기둥 + 벽 횃불(깜빡임) + 원소 깃발 + 떠다니는 빛 입자
+  const pillarM = M('#6f6878', { roughness: 0.9 }), capM = M(F.color, { emissive: F.color, emissiveIntensity: 0.5 });
+  for (let i = 0; i < 6; i++) { const a = -Math.PI / 2 + i * Math.PI / 3 + Math.PI / 6; for (const rr of [R_HUB + 1.2, R_IN - 0.9]) { const px = Math.cos(a) * rr, pz = Math.sin(a) * rr; at(cyl(0.6, 0.7, rr > R_IN - 2 ? WALL_H : 4.2, pillarM, 10), px, (rr > R_IN - 2 ? WALL_H : 4.2) / 2, pz, sc); at(cyl(0.75, 0.75, 0.3, capM, 10), px, rr > R_IN - 2 ? 4.4 : 4.3, pz, sc); } }
+  const flames = [];
+  for (let k = 0; k < 12; k++) { const a = (k + 0.5) / 12 * Math.PI * 2; const tx = Math.sin(a) * (R_IN - 0.6), tz = Math.cos(a) * (R_IN - 0.6);
+    at(box(0.25, 0.9, 0.25, M('#3a2a1e')), tx, 3.6, tz, sc);
+    const f = at(new THREE.Mesh(new THREE.ConeGeometry(0.22, 0.6, 10), new THREE.MeshBasicMaterial({ color: k % 2 ? F.color : '#ffb04a' })), tx, 4.35, tz, sc); flames.push(f);
+    if (k % 3 === 0) { const pl = new THREE.PointLight(k % 2 ? F.color : '#ffb04a', 12, 14, 1.6); pl.position.set(tx * 0.95, 4.6, tz * 0.95); sc.add(pl); flames.push(pl); }
+  }
+  anim.push(t => flames.forEach((f, i) => { if (f.isLight) f.intensity = 10 + Math.sin(t * 11 + i) * 3; else f.scale.set(1, 1 + Math.sin(t * 13 + i * 2) * 0.18, 1); }));
+  const pg = new THREE.BufferGeometry(); const pp = []; for (let k = 0; k < 260; k++) { const a = Math.random() * Math.PI * 2, r = 3 + Math.random() * (R_IN - 4); pp.push(Math.cos(a) * r, Math.random() * WALL_H, Math.sin(a) * r); } pg.setAttribute('position', new THREE.Float32BufferAttribute(pp, 3));
+  const motes = new THREE.Points(pg, new THREE.PointsMaterial({ color: F.color, size: 0.12, transparent: true, opacity: 0.8 })); sc.add(motes); anim.push(t => { motes.rotation.y = t * 0.03; motes.position.y = Math.sin(t * 0.5) * 0.3; });
   // 천장 링
-  const ceil = new THREE.Mesh(new THREE.RingGeometry(R_HUB + 1, R_IN, 72), M('#3a3546', { side: THREE.DoubleSide })); ceil.rotation.x = Math.PI / 2; ceil.position.y = 7; sc.add(ceil);
+  const ceil = new THREE.Mesh(new THREE.RingGeometry(R_HUB + 1, R_IN, 72), M('#3a3546', { side: THREE.DoubleSide })); ceil.rotation.x = Math.PI / 2; ceil.position.y = WALL_H; sc.add(ceil);
   // 방 칸막이 (6칸 경계, 입구 칸 제외)
-  const partM = M('#cfc6b6', { roughness: 0.9 }); const trimM = M(F.color, { emissive: F.color, emissiveIntensity: 0.35 });
-  for (let i = 0; i < 6; i++) { const a = -Math.PI / 2 + i * Math.PI / 3 + Math.PI / 6; const len = R_IN - R_HUB - 1.2; const p = box(0.35, 2.6, len, partM); const mid = R_HUB + 1.2 + len / 2; p.position.set(Math.cos(a) * mid, 1.3, Math.sin(a) * mid); p.rotation.y = -a + Math.PI / 2; sc.add(p); const tr = box(0.4, 0.12, len, trimM); tr.position.set(p.position.x, 2.66, p.position.z); tr.rotation.y = p.rotation.y; sc.add(tr); }
+  const partM = M('#3b3546', { roughness: 0.85, metalness: 0.1 }); const trimM = M(F.color, { emissive: F.color, emissiveIntensity: 0.35 });
+  for (let i = 0; i < 6; i++) { const a = -Math.PI / 2 + i * Math.PI / 3 + Math.PI / 6; const len = R_IN - R_HUB - 1.2; const p = box(0.4, 3.2, len, partM); const mid = R_HUB + 1.2 + len / 2; p.position.set(Math.cos(a) * mid, 1.6, Math.sin(a) * mid); p.rotation.y = -a + Math.PI / 2; sc.add(p); const tr = box(0.4, 0.12, len, trimM); tr.position.set(p.position.x, 3.26, p.position.z); tr.rotation.y = p.rotation.y; sc.add(tr); }
   // 중앙 관문: 원형 단 + 문 + 나선 계단
   const hub = new THREE.Group(); sc.add(hub);
   at(cyl(R_HUB - 1.2, R_HUB - 0.9, 0.3, M('#4a4556'), 48), 0, 0.15, 0, hub);
   const stepM = M('#b9b0c4');
-  for (let i = 0; i < 26; i++) { const a = i * 0.42 + Math.PI, s = box(1.8, 0.2, 0.7, stepM); s.position.set(Math.cos(a) * 1.9, 0.4 + i * 0.26, Math.sin(a) * 1.9); s.rotation.y = -a; hub.add(s); }
-  at(cyl(0.45, 0.45, 7, M('#8a8296'), 16), 0, 3.5, 0, hub);
+  for (let i = 0; i < 34; i++) { const a = i * 0.4 + Math.PI, s = box(2.4, 0.22, 0.9, stepM); s.position.set(Math.cos(a) * 2.8, 0.4 + i * 0.26, Math.sin(a) * 2.8); s.rotation.y = -a; hub.add(s); }
+  at(cyl(0.7, 0.7, WALL_H, M('#8a8296'), 16), 0, WALL_H / 2, 0, hub);
   const cleared = floorClear(n);
-  const gateFrame = new THREE.Group(); gateFrame.position.set(0, 0, 3.4); hub.add(gateFrame);
+  const gateFrame = new THREE.Group(); gateFrame.position.set(0, 0, 5.4); gateFrame.scale.setScalar(1.35); hub.add(gateFrame);
   at(box(0.4, 3.6, 0.5, M('#5a5468')), -1.5, 1.8, 0, gateFrame); at(box(0.4, 3.6, 0.5, M('#5a5468')), 1.5, 1.8, 0, gateFrame); at(box(3.4, 0.5, 0.5, M('#5a5468')), 0, 3.7, 0, gateFrame);
   const runeM = new THREE.MeshStandardMaterial({ color: F.color, emissive: F.color, emissiveIntensity: cleared ? 1.4 : 0.5, transparent: true, opacity: 0.85 });
   const door = at(new THREE.Mesh(new THREE.PlaneGeometry(2.6, 3.4), runeM), 0, 1.75, 0, gateFrame); door.userData.gate = true; clickables.push(door);
   const doorT = canvasTex(256, 336, (g, W, H) => { g.strokeStyle = 'rgba(255,255,255,.8)'; g.lineWidth = 6; g.beginPath(); g.arc(W / 2, H / 2, 70, 0, Math.PI * 2); g.stroke(); g.font = '64px Jua, sans-serif'; g.fillStyle = '#fff'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText(cleared ? '열림' : '잠김', W / 2, H / 2 + 4); });
   const doorFace = at(new THREE.Mesh(new THREE.PlaneGeometry(2.6, 3.4), new THREE.MeshBasicMaterial({ map: doorT, transparent: true })), 0, 1.75, 0.02, gateFrame); doorFace.userData.gate = true; clickables.push(doorFace);
-  const gateA = new THREE.Object3D(); gateA.position.set(0, 4.5, 3.4); sc.add(gateA); anchors.push({ o: gateA, kind: 'gate' });
+  // GPT 관문 문 이미지 (문틀·기둥 포함) — 있으면 임시 문/틀을 대신함
+  const applyDoor = (t, tint) => { t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 8; const asp = t.image.width / t.image.height, H = 5.0, W = H * asp;
+    const dm = new THREE.MeshStandardMaterial({ map: t, transparent: true, alphaTest: 0.5, emissive: '#ffffff', emissiveMap: t, emissiveIntensity: cleared ? 0.9 : 0.45, roughness: 0.6, color: tint || '#ffffff', side: THREE.DoubleSide });
+    const dmesh = new THREE.Mesh(new THREE.PlaneGeometry(W, H), dm); dmesh.position.set(0, H / 2 - 0.02, 0.3); dmesh.userData.gate = true; gateFrame.add(dmesh); clickables.push(dmesh);
+    gateFrame.children.forEach(c => { if (c !== dmesh) c.visible = false; });
+    if (cleared) { const halo = new THREE.Mesh(new THREE.PlaneGeometry(W * 0.62, H * 0.7), new THREE.MeshBasicMaterial({ color: F.color, transparent: true, opacity: 0.5 })); halo.position.set(0, H * 0.4, 0.32); gateFrame.add(halo); anim.push(tt => { halo.material.opacity = 0.35 + Math.sin(tt * 3) * 0.2; }); } };
+  TL.load(`tex/f${n}-door.png?v=1`, t => applyDoor(t), undefined, () => TL.load('tex/f1-door.png?v=1', t => applyDoor(t, new THREE.Color(F.color).lerp(new THREE.Color('#ffffff'), 0.6)), undefined, () => {}));
+  const gateA = new THREE.Object3D(); gateA.position.set(0, 7.8, 5.4); sc.add(gateA); anchors.push({ o: gateA, kind: 'gate' });
   if (cleared) anim.push(t => { door.position.y = 1.75 + Math.min(3.6, (t % 1000) * 0) ; runeM.opacity = 0.35 + Math.sin(t * 3) * 0.15; });
   // 관문 수호자
-  const gd = new THREE.Group(); gd.position.set(2.8, 0, 4.6); sc.add(gd);
+  const gd = new THREE.Group(); gd.position.set(4.4, 0, 7.0); gd.scale.setScalar(1.25); sc.add(gd);
   at(new THREE.Mesh(new THREE.ConeGeometry(0.8, 2.2, 16), M(F.color, { roughness: 0.6 })), 0, 1.1, 0, gd);
   const gh = at(new THREE.Mesh(new THREE.SphereGeometry(0.55, 18, 14), M('#f6efe2')), 0, 2.5, 0, gd);
   for (const sx of [-0.18, 0.18]) at(new THREE.Mesh(new THREE.SphereGeometry(0.08, 8, 6), M('#1d1a24')), sx, 2.55, 0.5, gd);
   at(new THREE.Mesh(new THREE.ConeGeometry(0.62, 0.9, 16), M(F.color)), 0, 3.15, 0, gd);
   const halo = at(new THREE.Mesh(new THREE.TorusGeometry(0.75, 0.05, 8, 36), new THREE.MeshBasicMaterial({ color: F.color })), 0, 3.7, 0, gd); halo.rotation.x = Math.PI / 2;
   gd.traverse(o => { if (o.isMesh) { o.userData.guard = true; clickables.push(o); o.castShadow = true; } });
-  anim.push(t => { gd.position.y = Math.sin(t * 2) * 0.12; halo.rotation.z = t; gd.rotation.y = Math.sin(t * 0.7) * 0.3; });
-  const gA = new THREE.Object3D(); gA.position.set(2.8, 4.3, 4.6); sc.add(gA); anchors.push({ o: gA, kind: 'guard' });
+  anim.push(t => { gd.position.y = Math.sin(t * 2) * 0.15; halo.rotation.z = t; gd.rotation.y = Math.sin(t * 0.7) * 0.3; });
+  const gA = new THREE.Object3D(); gA.position.set(4.4, 5.4, 7.0); sc.add(gA); anchors.push({ o: gA, kind: 'guard' });
   // 방 5개
   const roomPos = {};
   ROOMS.forEach((R, i) => {
-    const a = roomAngle(i); const rc = (R_HUB + R_IN) / 2 + 0.6; const cx = Math.cos(a) * rc, cz = Math.sin(a) * rc;
+    const a = roomAngle(i); const rc = (R_HUB + R_IN) / 2 + 1.0; const cx = Math.cos(a) * rc, cz = Math.sin(a) * rc;
     const g = new THREE.Group(); g.position.set(cx, 0, cz); g.rotation.y = -a - Math.PI / 2; sc.add(g); // 방 안쪽(-z)이 바깥벽
-    roomPos[R.key] = { x: cx * 0.78, z: cz * 0.78, a };
-    PROPS[R.key](g, F, anim);
-    const hit = new THREE.Mesh(new THREE.CylinderGeometry(3.2, 3.2, 3, 16), new THREE.MeshBasicMaterial({ visible: false })); hit.position.y = 1.5; hit.userData.room = R.key; g.add(hit); clickables.push(hit);
-    const lb = new THREE.Object3D(); lb.position.set(cx, 3.6, cz); sc.add(lb); anchors.push({ o: lb, kind: 'room', R, puzzle: F.puzzle === R.key });
+    roomPos[R.key] = { x: cx * 0.74, z: cz * 0.74, a };
+    const g2 = new THREE.Group(); g2.position.set(-4.6, 0, 0.4); g.add(g2); PROPS[R.key](g2, F, anim);
+    const g3 = new THREE.Group(); g3.position.set(4.6, 0, 0.4); g.add(g3); PROPS[R.key](g3, F, anim);
+    const hit = new THREE.Mesh(new THREE.CylinderGeometry(7, 7, 3.5, 16), new THREE.MeshBasicMaterial({ visible: false })); hit.position.y = 1.75; hit.userData.room = R.key; g.add(hit); clickables.push(hit);
+    const lb = new THREE.Object3D(); lb.position.set(cx, 4.6, cz); sc.add(lb); anchors.push({ o: lb, kind: 'room', R, puzzle: F.puzzle === R.key });
   });
   return { scene: sc, clickables, anim: t => anim.forEach(f => f(t)), anchors, view: 'floor', floor: floor, roomPos, F };
 }
@@ -248,17 +275,17 @@ function updateHero(dt, t) {
   if (!hero || !heroTarget) { if (hero) hero.children.forEach(c => { if (c.userData.leg) c.rotation.x = 0; }); return; }
   const d = heroTarget.clone().sub(hero.position); d.y = 0; const L = d.length();
   if (L < 0.08) { heroTarget = null; const cb = onArrive; onArrive = null; cb && cb(); return; }
-  const step = Math.min(L, dt * 4.2); d.normalize(); hero.position.addScaledVector(d, step); hero.rotation.y = Math.atan2(d.x, d.z);
+  const step = Math.min(L, dt * 7.5); d.normalize(); hero.position.addScaledVector(d, step); hero.rotation.y = Math.atan2(d.x, d.z);
   // 방 칸막이 통과 단순 처리: 허브 기둥 피하기
-  const r = Math.hypot(hero.position.x, hero.position.z); if (r < 1.0) hero.position.multiplyScalar(1.0 / Math.max(r, 0.01));
+  const r = Math.hypot(hero.position.x, hero.position.z); if (r < 3.8) hero.position.multiplyScalar(3.8 / Math.max(r, 0.01));
   hero.children.forEach(c => { if (c.userData.leg) c.rotation.x = Math.sin(t * 12) * 0.5 * Math.sign(c.userData.leg); });
 }
 function updateCamera() {
   if (!world) return;
-  if (world.view === 'out') { const a = view.yaw, d = 46; camera.position.set(Math.sin(a) * d, 20, Math.cos(a) * d); camera.lookAt(0, world.towerH * 0.42, 0); return; }
+  if (world.view === 'out') { const a = view.yaw, d = innerWidth < 720 ? 120 : 92; camera.position.set(Math.sin(a) * d, 34, Math.cos(a) * d); camera.lookAt(0, world.towerH * 0.42, 0); return; }
   const p = hero.position; const a = view.yaw; const d = view.dist;
   camera.position.set(p.x + Math.sin(a) * d * Math.cos(view.pitch), 1.6 + d * Math.sin(view.pitch), p.z + Math.cos(a) * d * Math.cos(view.pitch));
-  camera.lookAt(p.x, 1.4, p.z);
+  camera.lookAt(p.x, 2.4, p.z);
 }
 
 /* ================= 이름표 ================= */
@@ -290,7 +317,7 @@ async function showOutside() {
 async function enterFloor(n) {
   n = Math.max(1, Math.min(n, Math.min(S.top, 6)));
   await fade(true); disposeScene(scene); world = buildFloor(n); scene = world.scene; cur = n;
-  hero = makeHero(); dressHero(hero); scene.add(hero); placeHero(0, R_IN - 3.2); hero.rotation.y = Math.PI; view.yaw = 0; view.pitch = 0.5; view.dist = innerWidth < 720 ? 13 : 11;
+  hero = makeHero(); dressHero(hero); scene.add(hero); placeHero(0, R_IN - 5); hero.rotation.y = Math.PI; view.yaw = 0; view.pitch = 0.28; view.dist = innerWidth < 720 ? 16 : 13;
   const F = FLOORS[n - 1]; document.documentElement.style.setProperty('--el', F.color);
   $('#where-t').textContent = `${n}F · ${F.place}`; $('#where-s').textContent = `관문 수호자: ${F.guard}`; $('#hint').textContent = '바닥을 눌러 이동 · 방 이름표를 누르면 들어가요';
   $('#panel').hidden = false; renderPanel(); buildLabels(); renderDots(); await fade(false);
@@ -402,12 +429,12 @@ let drag = null;
 canvas.addEventListener('pointerdown', e => { drag = { x: e.clientX, y: e.clientY, yaw: view.yaw, pitch: view.pitch, moved: false }; canvas.setPointerCapture(e.pointerId); });
 canvas.addEventListener('pointermove', e => { if (!drag) return; const dx = e.clientX - drag.x, dy = e.clientY - drag.y; if (Math.hypot(dx, dy) > 6) drag.moved = true; if (drag.moved) { view.yaw = drag.yaw - dx * 0.006; if (world?.view === 'floor') view.pitch = Math.max(0.15, Math.min(1.2, drag.pitch + dy * 0.004)); } });
 canvas.addEventListener('pointerup', e => { const d = drag; drag = null; if (!d || d.moved || !modal.hidden) return; pick(e.clientX, e.clientY); });
-canvas.addEventListener('wheel', e => { if (world?.view === 'floor') { view.dist = Math.max(5, Math.min(18, view.dist + e.deltaY * 0.01)); e.preventDefault(); } }, { passive: false });
+canvas.addEventListener('wheel', e => { if (world?.view === 'floor') { view.dist = Math.max(6, Math.min(30, view.dist + e.deltaY * 0.015)); e.preventDefault(); } }, { passive: false });
 function pick(x, y) {
   if (!world) return; ndc.set(x / innerWidth * 2 - 1, -(y / innerHeight) * 2 + 1); ray.setFromCamera(ndc, camera);
   const hits = ray.intersectObjects(world.clickables, false);
   if (world.view === 'out') { const h = hits[0]; if (h) { const f = h.object.userData.floor; enterFloor(f === 'enter' ? Math.min(S.top, 6) : (f <= S.top ? f : Math.min(S.top, 6))); } return; }
-  if (hits.length) { const u = hits[0].object.userData; if (u.room) return goRoom(u.room); if (u.guard) return walkTo(2.8, 6.2, talkGuard); if (u.gate) return walkTo(0, 5.4, tryGate); }
+  if (hits.length) { const u = hits[0].object.userData; if (u.room) return goRoom(u.room); if (u.guard) return walkTo(4.4, 9.2, talkGuard); if (u.gate) return walkTo(0, 8.2, tryGate); }
   const g = ray.intersectObject(world.floor)[0]; if (g) walkTo(g.point.x, g.point.z);
 }
 addEventListener('keydown', e => { if (e.key === 'Escape' && !modal.hidden) closeModal(); });
